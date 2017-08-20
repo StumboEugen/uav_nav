@@ -28,8 +28,8 @@ ros::Publisher pub_cam;
 
 void sendSpd_px4(float vx, float vy, float vz, float wz) {
 	px4_autonomy::Velocity spd;
-	spd.x = vx;
-	spd.y = vy;
+	spd.x = -vy;
+	spd.y = vx;
 	spd.z = vz;
 	spd.yaw_rate = 0;
 	spd.header.stamp = ros::Time::now();
@@ -119,6 +119,8 @@ bool wayPointInit() {
 			addPosPoint( 	7.8,7	,true);
 			addPosPoint( 	7.5,5	);
 			break;
+		case 2:
+
 		default:
 			ROS_ERROR("no such waypoint group!!");
 			return false;
@@ -199,7 +201,7 @@ int main(int argc, char **argv)
 	n.getParam("/uav_nav/output_gazebo", OUTPUT_GAZEBO);
 	n.getParam("/uav_nav/output_px4", OUTPUT_PX4);
 
-	wayPointInit();
+	if (!wayPointInit()) return 0;
 
 	pub_spd_gazebo = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 	pub_cam = n.advertise<mavros_msgs::CameraPose>("/Cam_Pose", 1);
