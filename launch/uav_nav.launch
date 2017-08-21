@@ -1,7 +1,4 @@
 <launch>
-
-	 <include file="$(find mavros)/launch/px4_laser.launch" />
-	 <include file="$(find px4_autonomy)/launch/px4_autonomy.launch" />
 	 <include file="$(find uav_nav)/launch/amcl_demo.launch" />
 
 	 <node pkg="uav_nav" type="uav_nav" name="uav_nav" output="screen">
@@ -17,5 +14,10 @@
 	 	<param name="waypoint_group"		value="2"/>
 	 	<param name="output_gazebo"			value="true"/>
 	 	<param name="output_px4"			value="true"/>
+	 	<param name="height"				value="1"/>
+	 	<param name="spd_climb"				value="0.1"/>
+	 	<param name="spd_turn"				value="0.5"/>
+	 	<param name="angle_tolerance"		value="0.3"/>
+
 	 </node>
 </launch>
