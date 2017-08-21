@@ -135,6 +135,11 @@ bool wayPointInit() {
 			addPosPoint(2.4,7);
 			addPosPoint(0.375,8.635);
 			break;
+		case 3:
+			addPosPoint(1.58,1.175	,true);
+			addPosPoint(4.77,1.	,true);
+			break;
+			
 		default:
 			ROS_ERROR("no such waypoint group!!");
 			return false;
