@@ -1,0 +1,5 @@
+<launch>
+	<include file="$(find mavros)/launch/px4_laser.launch" />
+	<include file="$(find px4_autonomy)/launch/px4_autonomy.launch" />
+	<include file="$(find uav_nav)/launch/uav_nav.launch" />
+</launch>
