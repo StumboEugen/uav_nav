@@ -122,10 +122,10 @@ bool wayPointInit() {
 		case 2:
 			addPosPoint(1,	1	,true);
 			addPosPoint(4,	1	,true);
-			addPosPoint(4.5,-0.38	,true);
-			addPosPoint(5.8,-1.05	,true);
-			addPosPoint(7,	-0.82	,true);
-			addPosPoint(7.2,0.77	,true);
+			addPosPoint(4.5,-0.38);
+			addPosPoint(5.8,-1.05);
+			addPosPoint(7,	-0.82);
+			addPosPoint(7.2,0.77,true);
 			addPosPoint(9.4,1.14);
 			addPosPoint(8.7,2.8);
 			addPosPoint(5.53,2.9);
@@ -135,6 +135,11 @@ bool wayPointInit() {
 			addPosPoint(2.4,7);
 			addPosPoint(0.375,8.635);
 			break;
+		case 3:
+			addPosPoint(1.58,1.175	,true);
+			addPosPoint(4.77,1.	,true);
+			break;
+
 		default:
 			ROS_ERROR("no such waypoint group!!");
 			return false;
@@ -158,7 +163,6 @@ void laserCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg) {
 }
 
 void scan() {
-	ROS_INFO("start scan");
 	static bool last_scan_ori;
 	mavros_msgs::CameraPose cam_msg;
 	cam_msg.yaw = last_scan_ori ? 1 : -1;
@@ -168,7 +172,6 @@ void scan() {
 	ros::Duration(SCAN_DELAY).sleep();
 	cam_msg.yaw = 0;
 	pub_cam.publish(cam_msg);
-	ROS_INFO("scan done");
 }
 
 int status;
