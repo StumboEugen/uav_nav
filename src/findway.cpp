@@ -3,7 +3,7 @@ float SAFE_RANGE = 0.8;
 float STOP_RANGE = 0.2;
 float MAP_ORIGIN_TO_STRUCT_X = 1.0;
 float MAP_ORIGIN_TO_STRUCT_Y = 1.0;
-float SCAN_DELAY = 2.0;
+float SCAN_DELAY = 10.0;
 float SCAN_SPEED = 1.0;
 float BRAKE_COE = 1.0;
 int WAYPOINT_GROUP = 1;
@@ -214,7 +214,7 @@ int main(int argc, char **argv)
 	n.getParam("/uav_nav/origin_x", MAP_ORIGIN_TO_STRUCT_X);
 	n.getParam("/uav_nav/origin_y", MAP_ORIGIN_TO_STRUCT_Y);
 	n.getParam("/uav_nav/scan_spd", SCAN_SPEED);
-	n.getParam("/uav_nav/scan_spd", SCAN_DELAY);
+	n.getParam("/uav_nav/scan_delay", SCAN_DELAY);
 	n.getParam("/uav_nav/stop_range", STOP_RANGE);
 	n.getParam("/uav_nav/safe_range", SAFE_RANGE);
 	n.getParam("/uav_nav/brake_coe", BRAKE_COE);
