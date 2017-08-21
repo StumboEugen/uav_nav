@@ -253,9 +253,10 @@ int main(int argc, char **argv)
 	ros::Subscriber sub_laser = n.subscribe("/amcl_pose", 1, laserCB);
 	ros::Subscriber sub_status = n.subscribe("/px4/status", 1, statusCB);
 	ros::Rate loop_rate(10);
+	ros::Rate oneHz(1);
 
 	while (!gotlaser) {
-		ros::Duration(1).sleep();
+		oneHz.sleep();
 		ROS_INFO("waitting for amcl_pose");
 		ros::spinOnce();
 	}
