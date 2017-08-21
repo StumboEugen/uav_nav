@@ -1,7 +1,4 @@
 <launch>
-
-	 <include file="$(find mavros)/launch/px4_laser.launch" />
-	 <include file="$(find px4_autonomy)/launch/px4_autonomy.launch" />
 	 <include file="$(find uav_nav)/launch/amcl_demo.launch" />
 
 	 <node pkg="uav_nav" type="uav_nav" name="uav_nav" output="screen">
