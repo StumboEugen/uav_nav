@@ -3,7 +3,7 @@ float SAFE_RANGE = 0.8;
 float STOP_RANGE = 0.2;
 float MAP_ORIGIN_TO_STRUCT_X = 1.0;
 float MAP_ORIGIN_TO_STRUCT_Y = 1.0;
-float SCAN_DELAY = 10.0;
+float SCAN_DELAY = 2.0;
 float SCAN_SPEED = 1.0;
 float BRAKE_COE = 1.0;
 int WAYPOINT_GROUP = 1;
@@ -126,8 +126,10 @@ bool wayPointInit() {
 			addPosPoint(5.8,-1.05	,true);
 			addPosPoint(7,	-0.82	,true);
 			addPosPoint(7.2,0.77	,true);
-			addPosPoint(9.4,1.14);
-			addPosPoint(8.7,2.8);
+			addPosPoint(7.2,-1);
+			addPosPoint(4.3,-0.6);
+			addPosPoint(3.775,0.733);
+			addPosPoint(4.84,3.02);
 			addPosPoint(5.53,2.9);
 			addPosPoint(5.78,5.84,true);
 			addPosPoint(6.83,8.75);
@@ -138,6 +140,25 @@ bool wayPointInit() {
 		case 3:
 			addPosPoint(1.58,1.175	,true);
 			addPosPoint(4.77,1.	,true);
+			break;
+
+		case 4:
+			addPosPoint(1,	1	);
+			addPosPoint(4,	1	);
+			addPosPoint(4.5,-0.38);
+			addPosPoint(5.8,-1.05);
+			addPosPoint(7,	-0.82);
+			addPosPoint(7.2,0.77);
+			addPosPoint(7.2,-1);
+			addPosPoint(4.3,-0.6);
+			addPosPoint(3.775,0.733);
+			addPosPoint(4.84,3.02);
+			addPosPoint(5.53,2.9);
+			addPosPoint(5.78,5.84,true);
+			addPosPoint(6.83,8.75);
+			addPosPoint(4.7,8.9);
+			addPosPoint(2.4,7);
+			addPosPoint(0.375,8.635);
 			break;
 			
 		default:
