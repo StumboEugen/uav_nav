@@ -122,12 +122,14 @@ bool wayPointInit() {
 		case 2:
 			addPosPoint(1,	1	,true);
 			addPosPoint(4,	1	,true);
-			addPosPoint(4.5,-0.38);
-			addPosPoint(5.8,-1.05);
-			addPosPoint(7,	-0.82);
-			addPosPoint(7.2,0.77,true);
-			addPosPoint(9.4,1.14);
-			addPosPoint(8.7,2.8);
+			addPosPoint(4.5,-0.38	,true);
+			addPosPoint(5.8,-1.05	,true);
+			addPosPoint(7,	-0.82	,true);
+			addPosPoint(7.2,0.77	,true);
+			addPosPoint(7.2,-1);
+			addPosPoint(4.3,-0.6);
+			addPosPoint(3.775,0.733);
+			addPosPoint(4.84,3.02);
 			addPosPoint(5.53,2.9);
 			addPosPoint(5.78,5.84,true);
 			addPosPoint(6.83,8.75);
@@ -140,6 +142,25 @@ bool wayPointInit() {
 			addPosPoint(4.77,1.	,true);
 			break;
 
+		case 4:
+			addPosPoint(1,	1	);
+			addPosPoint(4,	1	);
+			addPosPoint(4.5,-0.38);
+			addPosPoint(5.8,-1.05);
+			addPosPoint(7,	-0.82);
+			addPosPoint(7.2,0.77);
+			addPosPoint(7.2,-1);
+			addPosPoint(4.3,-0.6);
+			addPosPoint(3.775,0.733);
+			addPosPoint(4.84,3.02);
+			addPosPoint(5.53,2.9);
+			addPosPoint(5.78,5.84,true);
+			addPosPoint(6.83,8.75);
+			addPosPoint(4.7,8.9);
+			addPosPoint(2.4,7);
+			addPosPoint(0.375,8.635);
+			break;
+			
 		default:
 			ROS_ERROR("no such waypoint group!!");
 			return false;
@@ -163,6 +184,7 @@ void laserCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg) {
 }
 
 void scan() {
+	ROS_INFO("start scan");
 	static bool last_scan_ori;
 	mavros_msgs::CameraPose cam_msg;
 	cam_msg.yaw = last_scan_ori ? 1 : -1;
@@ -172,6 +194,7 @@ void scan() {
 	ros::Duration(SCAN_DELAY).sleep();
 	cam_msg.yaw = 0;
 	pub_cam.publish(cam_msg);
+	ROS_INFO("scan done");
 }
 
 int status;
@@ -212,7 +235,7 @@ int main(int argc, char **argv)
 	n.getParam("/uav_nav/origin_x", MAP_ORIGIN_TO_STRUCT_X);
 	n.getParam("/uav_nav/origin_y", MAP_ORIGIN_TO_STRUCT_Y);
 	n.getParam("/uav_nav/scan_spd", SCAN_SPEED);
-	n.getParam("/uav_nav/scan_spd", SCAN_DELAY);
+	n.getParam("/uav_nav/scan_delay", SCAN_DELAY);
 	n.getParam("/uav_nav/stop_range", STOP_RANGE);
 	n.getParam("/uav_nav/safe_range", SAFE_RANGE);
 	n.getParam("/uav_nav/brake_coe", BRAKE_COE);
@@ -230,9 +253,10 @@ int main(int argc, char **argv)
 	ros::Subscriber sub_laser = n.subscribe("/amcl_pose", 1, laserCB);
 	ros::Subscriber sub_status = n.subscribe("/px4/status", 1, statusCB);
 	ros::Rate loop_rate(10);
+	ros::Rate oneHz(1);
 
 	while (!gotlaser) {
-		ros::Duration(1).sleep();
+		oneHz.sleep();
 		ROS_INFO("waitting for amcl_pose");
 		ros::spinOnce();
 	}
