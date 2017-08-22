@@ -126,145 +126,7 @@ void setOriForLastPoint(float ori) {
 	wayPoints[numofWaypoints - 1].ori = ori;
 }
 
-bool wayPointInit() {
-	switch(WAYPOINT_GROUP) {
-		case 1:		//standard 4
-			addPosPoint(	0, 	1	,true);
-			addPosPoint(	1, 	2	,true);
-			addPosPoint(	1.7,3.2	);
-			setOriForLastPoint(-1.5);
-			addPosPoint(	2.7,3.2	);
-			addPosPoint(	3, 	2	,true);
-			addPosPoint(	4, 	1	,true);
-			setOriForLastPoint(3.1);
-			addPosPoint( 	7, 	1	);
-			addPosPoint( 	7,	2	,true);
-			addPosPoint( 	8,	3	,true);
-			addPosPoint( 	7.2,1	);
-			addPosPoint( 	4.5,1	);
-			addPosPoint( 	4, 	3	,true);
-			addPosPoint( 	4, 	5	,true);
-			addPosPoint( 	7.5,5	);
-			addPosPoint( 	7.8,7	,true);
-			addPosPoint( 	7.5,5	);
-			break;
-		case 2:		//map_test
-			addPosPoint(1,	1	,true);
-			setOriForLastPoint(1.5);
-			addPosPoint(4,	1	,true);
-			addPosPoint(4.5,-0.38	,true);
-			addPosPoint(5.8,-1.05	,true);
-			setOriForLastPoint(3.1);
-			addPosPoint(7,	-0.82	,true);
-			addPosPoint(7.2,0.77	,true);
-			addPosPoint(7.2,-1);
-			addPosPoint(4.3,-0.6);
-			addPosPoint(3.775,0.733);
-			addPosPoint(4.84,3.02);
-			addPosPoint(5.53,2.9);
-			addPosPoint(5.78,5.84,true);
-			addPosPoint(6.83,8.75);
-			addPosPoint(4.7,8.9);
-			addPosPoint(2.4,7);
-			addPosPoint(0.375,8.635);
-			break;
-		case 3:		//map_small_test
-			addPosPoint(1.58,1.175	,true);
-			addPosPoint(4.77,1.	,true);
-			break;
-
-		case 4:		//test_no_stop
-			addPosPoint(1,	1	);
-			addPosPoint(4,	1	);
-			addPosPoint(4.5,-0.38);
-			addPosPoint(5.8,-1.05);
-			addPosPoint(7,	-0.82);
-			addPosPoint(7.2,0.77);
-			addPosPoint(7.2,-1);
-			addPosPoint(4.3,-0.6);
-			addPosPoint(3.775,0.733);
-			addPosPoint(4.84,3.02);
-			addPosPoint(5.53,2.9);
-			addPosPoint(5.78,5.84,true);
-			addPosPoint(6.83,8.75);
-			addPosPoint(4.7,8.9);
-			addPosPoint(2.4,7);
-			addPosPoint(0.375,8.635);
-			break;
-
-		case 5:		//whole test with stop
-			addPosPoint(1,1,true);
-			addPosPoint(4,1,true);
-			addPosPoint(4.4,0,true);
-			setOriForLastPoint(3.1);
-			addPosPoint(5.25,-1,true);
-			addPosPoint(7.36,-1.2,true);
-			addPosPoint(7.34,0.668,true);
-			addPosPoint(7.25,-1.2,true);
-			addPosPoint(4.56,-0.832,true);
-			setOriForLastPoint(1.57);
-			addPosPoint(4.277,2,true);
-			addPosPoint(5.07,3,true);
-			addPosPoint(7.42,2.915,true);
-			addPosPoint(7.93,4.41,true);
-			addPosPoint(7.48,2.9,true);
-			addPosPoint(5.62,2.83,true);
-			addPosPoint(5.73,5,true);
-			addPosPoint(5.82,5.8,true);
-			addPosPoint(6.1,7,true);
-			setOriForLastPoint(0);
-			addPosPoint(7.4,7.79,true);
-			addPosPoint(5.8,8.8,true);
-			addPosPoint(3.93,9.1,true);
-			addPosPoint(3.43,7.55,true);
-			setOriForLastPoint(-1.5);
-			addPosPoint(2.27,6.87,true);
-			setOriForLastPoint(3.1);
-			addPosPoint(1.21,7.75,true);
-			addPosPoint(1.332,9.222,true);
-			addPosPoint(-0.15,8.8,true);
-			break;
-			
-		case 6:		//whole test without stop
-			addPosPoint(1,1);
-			addPosPoint(4,1);
-			addPosPoint(4.4,0);
-			setOriForLastPoint(3.1);
-			addPosPoint(5.25,-1);
-			addPosPoint(7.36,-1.2);
-			addPosPoint(7.34,0.668);
-			addPosPoint(7.25,-1.2);
-			addPosPoint(4.56,-0.832);
-			setOriForLastPoint(1.57);
-			addPosPoint(4.277,2);
-			addPosPoint(5.07,3);
-			addPosPoint(7.42,2.915);
-			addPosPoint(7.93,4.41);
-			addPosPoint(7.48,2.9);
-			addPosPoint(5.62,2.83);
-			addPosPoint(5.73,5);
-			addPosPoint(5.82,5.8);
-			addPosPoint(6.1,7);
-			setOriForLastPoint(-1.5);
-			addPosPoint(7.4,7.79);
-			addPosPoint(5.8,8.8);
-			addPosPoint(3.93,9.1);
-			addPosPoint(3.43,7.55);
-			setOriForLastPoint(0);
-			addPosPoint(2.27,6.87);
-			setOriForLastPoint(3.1);
-			addPosPoint(1.21,7.75);
-			addPosPoint(1.332,9.222);
-			addPosPoint(-0.15,8.8);
-			break;
-
-		default:
-			ROS_ERROR("no such waypoint group!!");
-			return false;
-
-	}
-	return true;
-}
+bool wayPointInit();
 
 ///////////////////////////////////////////
 
@@ -496,4 +358,144 @@ int main(int argc, char **argv)
 	}
 
 	return 0;
+}
+
+bool wayPointInit() {
+	switch(WAYPOINT_GROUP) {
+		case 1:		//standard 4
+			addPosPoint(	0, 	1	,true);
+			addPosPoint(	1, 	2	,true);
+			addPosPoint(	1.7,3.2	);
+			setOriForLastPoint(-1.5);
+			addPosPoint(	2.7,3.2	);
+			addPosPoint(	3, 	2	,true);
+			addPosPoint(	4, 	1	,true);
+			setOriForLastPoint(3.1);
+			addPosPoint( 	7, 	1	);
+			addPosPoint( 	7,	2	,true);
+			addPosPoint( 	8,	3	,true);
+			addPosPoint( 	7.2,1	);
+			addPosPoint( 	4.5,1	);
+			addPosPoint( 	4, 	3	,true);
+			addPosPoint( 	4, 	5	,true);
+			addPosPoint( 	7.5,5	);
+			addPosPoint( 	7.8,7	,true);
+			addPosPoint( 	7.5,5	);
+			break;
+		case 2:		//map_test
+			addPosPoint(1,	1	,true);
+			setOriForLastPoint(1.5);
+			addPosPoint(4,	1	,true);
+			addPosPoint(4.5,-0.38	,true);
+			addPosPoint(5.8,-1.05	,true);
+			setOriForLastPoint(3.1);
+			addPosPoint(7,	-0.82	,true);
+			addPosPoint(7.2,0.77	,true);
+			addPosPoint(7.2,-1);
+			addPosPoint(4.3,-0.6);
+			addPosPoint(3.775,0.733);
+			addPosPoint(4.84,3.02);
+			addPosPoint(5.53,2.9);
+			addPosPoint(5.78,5.84,true);
+			addPosPoint(6.83,8.75);
+			addPosPoint(4.7,8.9);
+			addPosPoint(2.4,7);
+			addPosPoint(0.375,8.635);
+			break;
+		case 3:		//map_small_test
+			addPosPoint(1.58,1.175	,true);
+			addPosPoint(4.77,1.	,true);
+			break;
+
+		case 4:		//test_no_stop
+			addPosPoint(1,	1	);
+			addPosPoint(4,	1	);
+			addPosPoint(4.5,-0.38);
+			addPosPoint(5.8,-1.05);
+			addPosPoint(7,	-0.82);
+			addPosPoint(7.2,0.77);
+			addPosPoint(7.2,-1);
+			addPosPoint(4.3,-0.6);
+			addPosPoint(3.775,0.733);
+			addPosPoint(4.84,3.02);
+			addPosPoint(5.53,2.9);
+			addPosPoint(5.78,5.84,true);
+			addPosPoint(6.83,8.75);
+			addPosPoint(4.7,8.9);
+			addPosPoint(2.4,7);
+			addPosPoint(0.375,8.635);
+			break;
+
+		case 5:		//whole test with stop
+			addPosPoint(1,1,true);
+			addPosPoint(4,1,true);
+			addPosPoint(4.4,0,true);
+			setOriForLastPoint(3.1);
+			addPosPoint(5.25,-1,true);
+			addPosPoint(7.36,-1.2,true);
+			addPosPoint(7.34,0.668,true);
+			addPosPoint(7.25,-1.2,true);
+			addPosPoint(4.56,-0.832,true);
+			setOriForLastPoint(1.57);
+			addPosPoint(4.277,2,true);
+			addPosPoint(5.07,3,true);
+			addPosPoint(7.42,2.915,true);
+			addPosPoint(7.93,4.41,true);
+			addPosPoint(7.48,2.9,true);
+			addPosPoint(5.62,2.83,true);
+			addPosPoint(5.73,5,true);
+			addPosPoint(5.82,5.8,true);
+			addPosPoint(6.1,7,true);
+			setOriForLastPoint(0);
+			addPosPoint(7.4,7.79,true);
+			addPosPoint(5.8,8.8,true);
+			addPosPoint(3.93,9.1,true);
+			addPosPoint(3.43,7.55,true);
+			setOriForLastPoint(-1.5);
+			addPosPoint(2.27,6.87,true);
+			setOriForLastPoint(3.1);
+			addPosPoint(1.21,7.75,true);
+			addPosPoint(1.332,9.222,true);
+			addPosPoint(-0.15,8.8,true);
+			break;
+			
+		case 6:		//whole test without stop
+			addPosPoint(1,1);
+			addPosPoint(4,1);
+			addPosPoint(4.4,0);
+			setOriForLastPoint(3.1);
+			addPosPoint(5.25,-1);
+			addPosPoint(7.36,-1.2);
+			addPosPoint(7.34,0.668);
+			addPosPoint(7.25,-1.2);
+			addPosPoint(4.56,-0.832);
+			setOriForLastPoint(1.57);
+			addPosPoint(4.277,2);
+			addPosPoint(5.07,3);
+			addPosPoint(7.42,2.915);
+			addPosPoint(7.93,4.41);
+			addPosPoint(7.48,2.9);
+			addPosPoint(5.62,2.83);
+			addPosPoint(5.73,5);
+			addPosPoint(5.82,5.8);
+			addPosPoint(6.1,7);
+			setOriForLastPoint(-1.5);
+			addPosPoint(7.4,7.79);
+			addPosPoint(5.8,8.8);
+			addPosPoint(3.93,9.1);
+			addPosPoint(3.43,7.55);
+			setOriForLastPoint(0);
+			addPosPoint(2.27,6.87);
+			setOriForLastPoint(3.1);
+			addPosPoint(1.21,7.75);
+			addPosPoint(1.332,9.222);
+			addPosPoint(-0.15,8.8);
+			break;
+
+		default:
+			ROS_ERROR("no such waypoint group!!");
+			return false;
+
+	}
+	return true;
 }
