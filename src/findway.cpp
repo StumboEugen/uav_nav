@@ -50,7 +50,7 @@ void sendPose_px4 (float px, float py, float pz, float yaw) {
 	pos.z = pz;
 	pos.yaw = yaw;
 	pos.header.stamp = ros::Time::now();
-	pub_pose_px4.publish(spd);
+	pub_pose_px4.publish(pos);
 }
 
 float current_theta; //from laserCB
