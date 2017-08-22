@@ -121,7 +121,7 @@ bool wayPointInit() {
 			addPosPoint(	0, 	1	,true);
 			addPosPoint(	1, 	2	,true);
 			addPosPoint(	1.7,3.2	);
-			setOriForLastPoint(1.5);
+			setOriForLastPoint(-1.5);
 			addPosPoint(	2.7,3.2	);
 			addPosPoint(	3, 	2	,true);
 			addPosPoint(	4, 	1	,true);
@@ -139,9 +139,11 @@ bool wayPointInit() {
 			break;
 		case 2:		//map_test
 			addPosPoint(1,	1	,true);
+			setOriForLastPoint(1.5);
 			addPosPoint(4,	1	,true);
 			addPosPoint(4.5,-0.38	,true);
 			addPosPoint(5.8,-1.05	,true);
+			setOriForLastPoint(3.1);
 			addPosPoint(7,	-0.82	,true);
 			addPosPoint(7.2,0.77	,true);
 			addPosPoint(7.2,-1);
