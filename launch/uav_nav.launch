@@ -1,20 +1,19 @@
  <launch>
 	 <node pkg="uav_nav" type="uav_nav" name="uav_nav" output="screen">
 
-	 	<param name="spd_max"				value="1"/>
-	 	<param name="origin_x"				value="1"/>
-	 	<param name="origin_y"				value="1"/>
+	 	<param name="spd_max"				value="0.2"/>
+	 	<param name="origin_x"				value="0"/>
+	 	<param name="origin_y"				value="0"/>
 	 	<param name="scan_spd"				value="1"/>
 	 	<param name="scan_delay"			value="2"/>
-	 	<param name="stop_range"			value="0.2"/>
+	 	<param name="stop_range"			value="0.15"/>
 	 	<param name="safe_range"			value="0.8"/>
 	 	<param name="brake_coe"				value="1"/>
-	 	<param name="waypoint_group"		value="1"/>
-	 	<param name="output_gazebo"			value="true"/>
-	 	<param name="output_px4"			value="false"/>
+	 	<param name="waypoint_group"		value="5"/>
 	 	<param name="height"				value="1"/>
-	 	<param name="spd_climb"				value="0.1"/>
-	 	<param name="spd_turn"				value="0.25"/>
-	 	<param name="angle_tolerance"		value="0.15"/>
+	 	<param name="spd_climb"				value="0.25"/>
+	 	<param name="spd_turn"				value="0.5"/>
+	 	<param name="angle_tolerance"		value="0.1"/>
+	 	<param name="z_tolerance"			value="0.05"/>
 	 </node>
 </launch>

@@ -10,9 +10,10 @@ float HEIGHT = 1.0;
 float SPD_CLIMB = 0.1;
 float SPD_TURN = 0.5;
 float ANGLE_TOLERANCE = 0.3;
+float Z_TOLERANCE = 0.05;
 int WAYPOINT_GROUP = 1;
-bool OUTPUT_GAZEBO = true;
-bool OUTPUT_PX4 = true;
+
+const double PI = 3.1415926;
 
 #include "ros/ros.h"
 
@@ -28,165 +29,206 @@ bool OUTPUT_PX4 = true;
 
 #include <sstream>
 
-ros::Publisher pub_spd_gazebo;
-ros::Publisher pub_spd_px4;
-ros::Publisher pub_cam;
 ros::Publisher pub_pose_px4;
 
-void sendSpd_px4(float vx, float vy, float vz, float wz) {
-	px4_autonomy::Velocity spd;
-	spd.x = -vy;
-	spd.y = vx;
-	spd.z = vz;
-	spd.yaw_rate = wz;
-	spd.header.stamp = ros::Time::now();
-	pub_spd_px4.publish(spd);
-}
-
-void sendPose_px4 (float px, float py, float pz, float yaw) {
+float last_set_x, last_set_y, last_set_z, last_set_yaw;
+void sendPose_px4(float px, float py, float pz, float yaw) {
 	px4_autonomy::Position pos;
-	pos.x = px;
-	pos.y = py;
+	pos.x =-py;
+	pos.y = px;
 	pos.z = pz;
+	yaw += PI/2;
+	if (yaw > PI) {
+		yaw -= PI * 2;
+	}
 	pos.yaw = yaw;
 	pos.header.stamp = ros::Time::now();
 	pub_pose_px4.publish(pos);
+	last_set_x = px;
+	last_set_y = py;
+	last_set_z = pz;
+	last_set_yaw = yaw;
 }
-
-float current_theta; //from laserCB
-void sendSpd_gazebo(float vx, float vy, float wz) {
-	ROS_DEBUG("map vel vx vy:%.3f\t%.3f", vx, vy);
-	geometry_msgs::Twist spd;
-	spd.linear.x = vx * cos(-current_theta) - vy * sin(-current_theta);
-	spd.linear.y = vx * sin(-current_theta) + vy * cos(-current_theta);
-	spd.angular.z = wz;
-	pub_spd_gazebo.publish(spd);
-}
-
-
-void sendSpd(float vx, float vy, float wz) {
-	if (OUTPUT_GAZEBO) {
-		sendSpd_gazebo(vx,vy,wz);
-	}
-
-	if (OUTPUT_PX4) {
-		sendSpd_px4(vx,vy,0,wz);
-	}
-}
-
-void sendSpd(float vx, float vy) {
-	sendSpd(vx, vy, 0);
-}
-
-void stop() {
-	sendSpd(0,0,0);
-}
-
-/////////////////////////////////////////////
-
-typedef struct _pos_points_s
-{
-	float x;
-	float y;
-	bool need_scan;
-	float waypoint_delay;
-	bool set_ori;
-	float ori;
-} _pos_points_t;
-
-int progress = 0;	//the current target to go
-int numofWaypoints = 0;
-_pos_points_t wayPoints[50];
-
-void addPosPoint(float x, float y, bool need_scan, float delaytime) {
-	_pos_points_t pos;
-	pos.x = x + MAP_ORIGIN_TO_STRUCT_X;
-	pos.y = y + MAP_ORIGIN_TO_STRUCT_Y;
-	pos.need_scan = need_scan;
-	pos.waypoint_delay = delaytime;
-	pos.set_ori = false;
-	wayPoints[numofWaypoints] = pos;
-	numofWaypoints ++;
-}
-
-void addPosPoint(float x, float y, bool need_scan) {
-	addPosPoint(x, y, need_scan, 0);
-}
-
-void addPosPoint(float x, float y, float delaytime) {
-	addPosPoint(x, y, false, delaytime);
-}
-
-void addPosPoint(float x, float y) {
-	addPosPoint(x, y, false);
-}
-
-void setOriForLastPoint(float ori) {
-	wayPoints[numofWaypoints - 1].set_ori = true;
-	wayPoints[numofWaypoints - 1].ori = ori;
-}
-
-bool wayPointInit();
-
-///////////////////////////////////////////
-
-float current_x;
-float current_y;
 
 bool gotlaser = false;
-
-void laserCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg) {
+float laser_x, laser_y, laser_z, laser_yaw;
+void laserPoseCB(const geometry_msgs::PoseStamped &msg) {
 	gotlaser = true;
-	current_x = msg -> pose.pose.position.x;
-	current_y = msg -> pose.pose.position.y;
-	current_theta = asin(msg -> pose.pose.orientation.z) * 2;
-	// ROS_INFO("theta now: %.3f", current_theta);
+	laser_x = msg.pose.position.x;
+	laser_y = msg.pose.position.y;
+	laser_z = msg.pose.position.z;
+	laser_yaw = (msg.pose.orientation.z) * 2;
 }
 
-void scan() {
-	ROS_INFO("start scan");
-	static bool last_scan_ori;
-	mavros_msgs::CameraPose cam_msg;
-	cam_msg.yaw = last_scan_ori ? 1 : -1;
-	cam_msg.yaw *= SCAN_SPEED;
-	last_scan_ori = !last_scan_ori;
-	pub_cam.publish(cam_msg);
-	ros::Duration(SCAN_DELAY).sleep();
-	cam_msg.yaw = 0;
-	pub_cam.publish(cam_msg);
-	ROS_INFO("scan done");
+float pose_x, pose_y, pose_z, pose_yaw;
+void poseCB(const px4_autonomy::Position &msg) {
+	pose_x = msg.y;
+	pose_y =-msg.x;
+	pose_z = msg.z;
+	float yaw = msg.yaw;
+	yaw -= PI/2;
+	if (yaw < -PI) {
+		yaw += PI * 2;
+	}
+	pose_yaw = yaw;
 }
 
 int status;
-
 void statusCB(const std_msgs::UInt8::ConstPtr& msg) {
 	status = msg -> data;
 }
 
-float pose_x, pose_y, pose_z, pose_yaw;
-px4_autonomy::Position pose_current;
-void poseCB(const px4_autonomy::Position &msg) {
-	pose_x = msg.x;
-	pose_y = msg.y;
-	pose_z = msg.z;
-	pose_yaw = msg.yaw;
-	pose_current = msg;
+typedef struct _pos_points_s
+{
+	float x, y, z, yaw;
+	bool change_z;
+	bool change_yaw;
+	float delay;
+	bool need_delay;
+	bool need_scan;
+} _pos_points_t;
+
+int progress = 0;
+int numofWayPoints = 0;
+_pos_points_t wayPoints[50];
+
+void setZ(float z) {
+	wayPoints[numofWayPoints - 1].change_z = true;
+	wayPoints[numofWayPoints - 1].z = z;
 }
 
-float set_point_z;
-void setPointCB(const geometry_msgs::PoseStamped &msg) {
-	set_point_z = msg.pose.position.z;
+void setYaw(float yaw) {
+	wayPoints[numofWayPoints - 1].change_yaw = true;
+	wayPoints[numofWayPoints - 1].yaw = yaw;
+}
+
+void setScan() {
+	wayPoints[numofWayPoints - 1].need_scan = true;
+}
+
+void setDelay(float delay) {
+	wayPoints[numofWayPoints - 1].need_delay = true;
+	wayPoints[numofWayPoints - 1].delay = delay;
+}
+
+void addPosPoint(float x, float y) {
+	_pos_points_t pp;
+	pp.x = x + MAP_ORIGIN_TO_STRUCT_X;
+	pp.y = y + MAP_ORIGIN_TO_STRUCT_Y;
+	if (numofWayPoints != 0) {
+		pp.z = wayPoints[numofWayPoints - 1].z;
+		pp.yaw = wayPoints[numofWayPoints - 1].yaw;
+	} else {
+		pp.z = HEIGHT;
+		pp.yaw = 0;
+	}
+	pp.change_z = false;
+	pp.change_yaw = false;
+	pp.need_scan = false;
+	wayPoints[numofWayPoints] = pp;
+	numofWayPoints ++;
+
+	setDelay(1);	//default delay 1 sec
+}
+
+bool wayPointInit();
+
+bool arrived_z(float from, float to) {
+	if (fabs(from - to) < Z_TOLERANCE) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool arrived_yaw(float from, float to) {
+	if ( fabs(from - to) < ANGLE_TOLERANCE) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+void turnYaw(float yaw_from, float yaw_to) {
+	float turn_ori;
+	float yaw_diff = yaw_to - yaw_from;
+	if (yaw_diff > PI || (yaw_diff < 0 && yaw_diff > -PI)) {
+		turn_ori = -1;
+	} else {
+		turn_ori = 1;
+	}
+
+	int counts = 1;
+	ros::spinOnce();
+
+	while (!arrived_yaw( laser_yaw, yaw_to)) {
+		float yaw2set = yaw_from + turn_ori * SPD_TURN * 0.05 * counts;
+		if (yaw2set < -PI) {
+			yaw2set += 2 * PI;
+		}
+		if (yaw2set > PI) {
+			yaw2set -= 2 * PI;
+		}
+		if ( arrived_yaw( yaw2set, yaw_to)) {
+			yaw2set = yaw_to;
+		}
+		sendPose_px4(last_set_x, last_set_y, last_set_z, yaw2set);
+		ros::Duration(0.05).sleep();
+		counts ++;
+		ros::spinOnce();
+	}
+	ROS_INFO("turn finished");
+}
+
+void climbZ(float z_from, float z_to) {
+	float climb_ori;
+	if (z_from > z_to) {
+		climb_ori = -1;
+	} else {
+		climb_ori = 1;
+	}
+
+	int counts;
+	ros::spinOnce();
+
+	while (!arrived_z( laser_z, z_to)) {
+		float z2set = z_from + climb_ori * SPD_CLIMB * 0.05 * counts;
+		if (arrived_z( z2set, z_to)) {
+			z2set = z_to;
+		}
+		sendPose_px4(last_set_x, last_set_y, z2set, last_set_yaw);
+		ros::Duration(0.05).sleep();
+		counts ++;
+		ros::spinOnce();
+	}
+	ROS_INFO("climb finished");
 }
 
 ros::Publisher pub_takeoff;
 
-void land() {
-	while (status != 4 && status != 5) {
+void takeOff() {
+	while (status != 1) {
 		ros::Duration(1).sleep();
-		ROS_INFO("status not 4 or 5!!");
+		ROS_INFO("waitting fir OFFBOARD");
 		ros::spinOnce();
 	}
 
+	px4_autonomy::Takeoff cmd_tf;
+	cmd_tf.take_off = 1;
+	cmd_tf.header.stamp = ros::Time::now();
+	pub_takeoff.publish(cmd_tf);
+
+	while (status != 5) {
+		ros::Duration(1).sleep();
+		ROS_INFO("taking off...");
+		ros::spinOnce();
+	}
+	ros::Duration(1).sleep();
+	ROS_INFO("Start climb");
+	climbZ(pose_z, HEIGHT);
+}
+
+void land() {
 	px4_autonomy::Takeoff cmd_tf;
 	cmd_tf.take_off = 2;
 	cmd_tf.header.stamp = ros::Time::now();
@@ -201,42 +243,28 @@ void land() {
 	ROS_INFO("landed");
 }
 
-void takeoff() {
-	while (status != 1) {
-		ros::Duration(1).sleep();
-		ROS_INFO("waitting for OFFBOARD");
-		ros::spinOnce();
-	}
-
-	px4_autonomy::Takeoff cmd_tf;
-	cmd_tf.take_off = 1;
-	cmd_tf.header.stamp = ros::Time::now();
-	pub_takeoff.publish(cmd_tf);
-
-	while (status != 5) {
-		ros::Duration(1).sleep();
-		ROS_INFO("taking off...");
-		ros::spinOnce();
-	}
-	int climb_count = 0;
-	ROS_INFO("Start climbing");
-	while ( HEIGHT - pose_z > 0.1) {
-		sendSpd_px4(0,0,0.2,0);
-		// sendPose_px4(pose_x, pose_y, pose_z + SPD_CLIMB * climb_count * 0.1, 1.57);
-		ros::Duration(0.1).sleep();
-		climb_count++;
-		ros::spinOnce();
-	}
-	ROS_INFO("climb finished");
-
-	stop();
-	ros::Duration(1).sleep();
+void scan() {
+;
 }
 
-////////////////////////////////////////////
+bool needSetStartXY = false;
+float start_x, start_y;
+float spdx, spdy;
+int counts_XY;
+void setStartXY(_pos_points_t wp) {
+	if (needSetStartXY) {
+		float disx = wp.x - start_x;
+		float disy = wp.y - start_y;
+		float dis = sqrt(disx * disx + disy + disy);
+		spdx = SPD_MAX / dis * disx;
+		spdy = SPD_MAX / dis * disy;
+		start_x = pose_x;
+		start_y = pose_y;
+		counts_XY = 1;
+	}
+}
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 	ros::init(argc, argv, "uav_nav");
 	ros::NodeHandle n;
 
@@ -249,112 +277,114 @@ int main(int argc, char **argv)
 	n.getParam("/uav_nav/safe_range", SAFE_RANGE);
 	n.getParam("/uav_nav/brake_coe", BRAKE_COE);
 	n.getParam("/uav_nav/waypoint_group", WAYPOINT_GROUP);
-	n.getParam("/uav_nav/output_gazebo", OUTPUT_GAZEBO);
-	n.getParam("/uav_nav/output_px4", OUTPUT_PX4);
 	n.getParam("/uav_nav/height", HEIGHT);
 	n.getParam("/uav_nav/spd_climb", SPD_CLIMB);
 	n.getParam("/uav_nav/spd_turn", SPD_TURN);
 	n.getParam("/uav_nav/angle_tolerance", ANGLE_TOLERANCE);
-
+	n.getParam("/uav_nav/z_tolerance", Z_TOLERANCE);
 
 	if (!wayPointInit()) return 0;
 
-	pub_spd_gazebo = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
-	pub_cam = n.advertise<mavros_msgs::CameraPose>("/Cam_Pose", 1);
+	pub_pose_px4 = n.advertise<px4_autonomy::Position>("/px4/cmd_pos",1);
 	pub_takeoff = n.advertise<px4_autonomy::Takeoff>("/px4/cmd_takeoff", 1);
-	pub_spd_px4 = n.advertise<px4_autonomy::Velocity>("/px4/cmd_vel",1);
-	pub_pose_px4 = n.advertise<px4_autonomy::Position>("/px4/cmd_pose",1);
 
-	ros::Subscriber sub_laser = n.subscribe("/amcl_pose", 1, laserCB);
+	ros::Subscriber sub_laser = n.subscribe("/mavros/vision_pose/pose", 1, laserPoseCB);
+	ros::Subscriber sub_pose = n.subscribe("/px4/pose", 1, poseCB);	
 	ros::Subscriber sub_status = n.subscribe("/px4/status", 1, statusCB);
-	ros::Subscriber sub_pose = n.subscribe("/px4/pose", 1, poseCB);
-	ros::Subscriber sub_set_point = n.subscribe("/mavros/setpoint_position/local", 1, setPointCB);
-	ros::Rate loop_rate(10);
-	ros::Rate oneHz(1);
+
+	ros::Rate loop_rate(20);
 
 	while (!gotlaser) {
-		oneHz.sleep();
-		ROS_INFO("waitting for amcl_pose");
 		ros::spinOnce();
+		ROS_INFO("waitting for amcl_pose");
+		ros::Duration(1).sleep();
 	}
+
+	last_set_x = laser_x;
+	last_set_y = laser_y;
+	last_set_yaw = 0;
 
 	ROS_INFO("get laser, start guide");
 
-	if (OUTPUT_PX4 == true) {
-		takeoff();
-	}
+	takeOff();
 
 	ROS_INFO("take off complete");
+	ros::Duration(1).sleep();
+
+	needSetStartXY = true;
 
 	while (ros::ok()) {
-		// ROS_INFO("%.2f\t%.2f", wayPoints[0].x, wayPoints[0].y);
 		ros::spinOnce();
+		
+		_pos_points_t wp = wayPoints[progress];
+		setStartXY(wp);
 
-		float disx = wayPoints[progress].x - current_x;
-		float disy = wayPoints[progress].y - current_y;
-		float dis = sqrt(disx * disx + disy * disy);
-		// ROS_INFO("??? %f\t%f", disx, disy);
+		float dis_now_x = wp.x - pose_x;
+		float dis_now_y = wp.y - pose_y;
+		float dis_now = sqrt(dis_now_x * dis_now_x + dis_now_y + dis_now_y);
 
-		if (dis < STOP_RANGE) {
-			ROS_INFO("Reach Point #%i \n next: \t%.3f\t%.3f\txplus:%.3f\typlus:%.3f"
-				, progress ,wayPoints[progress+1].x, wayPoints[progress+1].y,
-				wayPoints[progress+1].x - wayPoints[progress].x,
-				wayPoints[progress+1].y - wayPoints[progress].y);
-			stop();
-			if (wayPoints[progress].need_scan == false) {
-				float t = wayPoints[progress].waypoint_delay;
-				if (t != 0) {
-					ros::Duration(t).sleep();
-				}
-			} else {
+		if (dis_now < STOP_RANGE) {
+			ROS_INFO("Reach Point NO.%i:  %.3f\t%.3f", 
+				progress, wp.x, wp.y);
+
+			if (wp.need_delay) {
+				ros::Duration(wp.delay).sleep();
+			}
+
+			if (wp.change_yaw) {
+				float from = pose_yaw;
+				float to = wp.yaw;
+				ROS_INFO("need turn\tFrom %.3f\tto %.3f", from, to);
+				turnYaw(from, to);
+			}
+
+			if (wp.change_z) {
+				float from = pose_z;
+				float to = wp.z;
+				ROS_INFO("need climb\tFrom %.3f\tto %.3f", from, to);
+				climbZ(from, to);
+			}
+
+			if (wp.need_scan) {
+				ROS_INFO("need scan");
 				scan();
 			}
 
-			if (wayPoints[progress].set_ori == true) {
-				ROS_INFO("turnning...");
-				float turn_ori;
-				float target_theta = wayPoints[progress].ori;
-				float delta_theta = target_theta - current_theta;
-				if (delta_theta > 3.1415 || (delta_theta < 0 && delta_theta > -3.1415)) {
-					turn_ori = -1;
-				} else {
-					turn_ori = 1;
-				}
-
-				while (	target_theta - current_theta < -ANGLE_TOLERANCE
-						||target_theta - current_theta > ANGLE_TOLERANCE) {
-					// ROS_INFO("CAL TOLERATE: %.3f", (float)abs(target_theta - current_theta));
-					ROS_INFO("%.3f\t%.3f", target_theta, current_theta);
-					sendSpd(0,0,turn_ori * SPD_TURN);
-					loop_rate.sleep();
-					ros::spinOnce();
-				}
-				stop();
-				ros::Duration(1).sleep();
-				ROS_INFO("turn finished");
-			}
 			progress ++;
+
+			if ( progress >= numofWayPoints) {
+				ROS_INFO("nav finished");
+				ros::Duration(3).sleep();
+				ROS_INFO("start land");
+				ros::spinOnce();
+				land();
+				ros::spin();
+			}
+
+			needSetStartXY = true;
+
+			ROS_INFO("NEXT: \t%.3f\t%.3f\txplus:%.3f\typlus:%.3f\n"
+			, wayPoints[progress+1].x, wayPoints[progress+1].y,
+			wayPoints[progress+1].x - wp.x,
+			wayPoints[progress+1].y - wp.y);
+
 			continue;
 		}
 
-		float brake_coe = BRAKE_COE;
-		if (dis < SAFE_RANGE) {
-			brake_coe *= dis / SAFE_RANGE;
-		}
 
-		float spdx = SPD_MAX / dis * disx * brake_coe;
-		float spdy = SPD_MAX / dis * disy * brake_coe;
-		sendSpd(spdx, spdy);
+		float x2set = start_x + spdx * 0.05 * counts_XY;
+		float y2set = start_y + spdy * 0.05 * counts_XY;
+		float dis_set_x = wp.x - x2set;
+		float dis_set_y = wp.y - y2set;
+		float dis_set = sqrt(dis_set_x * dis_set_x + dis_set_y + dis_set_y);
+		if (dis_set < STOP_RANGE) {
+			x2set = wp.x;
+			y2set = wp.y;
+		}
+		sendPose_px4(x2set, y2set, last_set_z, last_set_yaw);
+		counts_XY++;
 
 		loop_rate.sleep();
-
-		if (progress >= numofWaypoints) {
-			stop();
-			ROS_INFO("nav finished");
-			ros::spinOnce();
-			land();
-			ros::spin();
-		}
 	}
 
 	return 0;
@@ -362,140 +392,36 @@ int main(int argc, char **argv)
 
 bool wayPointInit() {
 	switch(WAYPOINT_GROUP) {
-		case 1:		//standard 4
-			addPosPoint(	0, 	1	,true);
-			addPosPoint(	1, 	2	,true);
-			addPosPoint(	1.7,3.2	);
-			setOriForLastPoint(-1.5);
-			addPosPoint(	2.7,3.2	);
-			addPosPoint(	3, 	2	,true);
-			addPosPoint(	4, 	1	,true);
-			setOriForLastPoint(3.1);
-			addPosPoint( 	7, 	1	);
-			addPosPoint( 	7,	2	,true);
-			addPosPoint( 	8,	3	,true);
-			addPosPoint( 	7.2,1	);
-			addPosPoint( 	4.5,1	);
-			addPosPoint( 	4, 	3	,true);
-			addPosPoint( 	4, 	5	,true);
-			addPosPoint( 	7.5,5	);
-			addPosPoint( 	7.8,7	,true);
-			addPosPoint( 	7.5,5	);
+		case 5:
+			addPosPoint( 1.00, 1.00);
+			addPosPoint( 4.00, 1.00); setZ(1.3);
+			addPosPoint( 4.40, 0.00); setYaw(3.1);
+			addPosPoint( 5.25,-1.00); setZ(0.8);
+			addPosPoint( 7.36,-1.20);
+			addPosPoint( 7.34, 0.67);
+			addPosPoint( 7.25,-1.20);
+			addPosPoint( 4.56,-0.83); setYaw(1.57);
+			addPosPoint( 4.28, 2.00);
+			addPosPoint( 5.07, 3.00);
+			addPosPoint( 7.42, 2.92);
+			addPosPoint( 7.93, 4.41);
+			addPosPoint( 7.48, 2.90);
+			addPosPoint( 5.62, 2.83);
+			addPosPoint( 5.73, 5.00);
+			addPosPoint( 5.82, 5.80);
+			addPosPoint( 6.10, 7.00); setYaw(-1.57);
+			addPosPoint( 7.40, 7.79);
+			addPosPoint( 5.80, 8.80);
+			addPosPoint( 3.93, 9.10);
+			addPosPoint( 3.43, 7.55); setYaw(0);
+			addPosPoint( 2.27, 6.87); setYaw(3.1);
+			addPosPoint( 1.21, 7.75);
+			addPosPoint( 1.33, 9.22);
+			addPosPoint(-0.15, 8.80);
 			break;
-		case 2:		//map_test
-			addPosPoint(1,	1	,true);
-			setOriForLastPoint(1.5);
-			addPosPoint(4,	1	,true);
-			addPosPoint(4.5,-0.38	,true);
-			addPosPoint(5.8,-1.05	,true);
-			setOriForLastPoint(3.1);
-			addPosPoint(7,	-0.82	,true);
-			addPosPoint(7.2,0.77	,true);
-			addPosPoint(7.2,-1);
-			addPosPoint(4.3,-0.6);
-			addPosPoint(3.775,0.733);
-			addPosPoint(4.84,3.02);
-			addPosPoint(5.53,2.9);
-			addPosPoint(5.78,5.84,true);
-			addPosPoint(6.83,8.75);
-			addPosPoint(4.7,8.9);
-			addPosPoint(2.4,7);
-			addPosPoint(0.375,8.635);
-			break;
-		case 3:		//map_small_test
-			addPosPoint(1.58,1.175	,true);
-			addPosPoint(4.77,1.	,true);
-			break;
-
-		case 4:		//test_no_stop
-			addPosPoint(1,	1	);
-			addPosPoint(4,	1	);
-			addPosPoint(4.5,-0.38);
-			addPosPoint(5.8,-1.05);
-			addPosPoint(7,	-0.82);
-			addPosPoint(7.2,0.77);
-			addPosPoint(7.2,-1);
-			addPosPoint(4.3,-0.6);
-			addPosPoint(3.775,0.733);
-			addPosPoint(4.84,3.02);
-			addPosPoint(5.53,2.9);
-			addPosPoint(5.78,5.84,true);
-			addPosPoint(6.83,8.75);
-			addPosPoint(4.7,8.9);
-			addPosPoint(2.4,7);
-			addPosPoint(0.375,8.635);
-			break;
-
-		case 5:		//whole test with stop
-			addPosPoint(1,1,true);
-			addPosPoint(4,1,true);
-			addPosPoint(4.4,0,true);
-			setOriForLastPoint(3.1);
-			addPosPoint(5.25,-1,true);
-			addPosPoint(7.36,-1.2,true);
-			addPosPoint(7.34,0.668,true);
-			addPosPoint(7.25,-1.2,true);
-			addPosPoint(4.56,-0.832,true);
-			setOriForLastPoint(1.57);
-			addPosPoint(4.277,2,true);
-			addPosPoint(5.07,3,true);
-			addPosPoint(7.42,2.915,true);
-			addPosPoint(7.93,4.41,true);
-			addPosPoint(7.48,2.9,true);
-			addPosPoint(5.62,2.83,true);
-			addPosPoint(5.73,5,true);
-			addPosPoint(5.82,5.8,true);
-			addPosPoint(6.1,7,true);
-			setOriForLastPoint(0);
-			addPosPoint(7.4,7.79,true);
-			addPosPoint(5.8,8.8,true);
-			addPosPoint(3.93,9.1,true);
-			addPosPoint(3.43,7.55,true);
-			setOriForLastPoint(-1.5);
-			addPosPoint(2.27,6.87,true);
-			setOriForLastPoint(3.1);
-			addPosPoint(1.21,7.75,true);
-			addPosPoint(1.332,9.222,true);
-			addPosPoint(-0.15,8.8,true);
-			break;
-			
-		case 6:		//whole test without stop
-			addPosPoint(1,1);
-			addPosPoint(4,1);
-			addPosPoint(4.4,0);
-			setOriForLastPoint(3.1);
-			addPosPoint(5.25,-1);
-			addPosPoint(7.36,-1.2);
-			addPosPoint(7.34,0.668);
-			addPosPoint(7.25,-1.2);
-			addPosPoint(4.56,-0.832);
-			setOriForLastPoint(1.57);
-			addPosPoint(4.277,2);
-			addPosPoint(5.07,3);
-			addPosPoint(7.42,2.915);
-			addPosPoint(7.93,4.41);
-			addPosPoint(7.48,2.9);
-			addPosPoint(5.62,2.83);
-			addPosPoint(5.73,5);
-			addPosPoint(5.82,5.8);
-			addPosPoint(6.1,7);
-			setOriForLastPoint(-1.5);
-			addPosPoint(7.4,7.79);
-			addPosPoint(5.8,8.8);
-			addPosPoint(3.93,9.1);
-			addPosPoint(3.43,7.55);
-			setOriForLastPoint(0);
-			addPosPoint(2.27,6.87);
-			setOriForLastPoint(3.1);
-			addPosPoint(1.21,7.75);
-			addPosPoint(1.332,9.222);
-			addPosPoint(-0.15,8.8);
-			break;
-
 		default:
-			ROS_ERROR("no such waypoint group!!");
+			ROS_ERROR("no such waypoint group!");
 			return false;
-
 	}
 	return true;
 }
