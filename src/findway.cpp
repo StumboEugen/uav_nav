@@ -38,7 +38,7 @@ void sendSpd_px4(float vx, float vy, float vz, float wz) {
 	spd.x = -vy;
 	spd.y = vx;
 	spd.z = vz;
-	spd.yaw_rate = 0;
+	spd.yaw_rate = wz;
 	spd.header.stamp = ros::Time::now();
 	pub_spd_px4.publish(spd);
 }
@@ -356,11 +356,14 @@ void takeoff() {
 		ROS_INFO("taking off...");
 		ros::spinOnce();
 	}
-	
+	int climb_count = 0;
 	ROS_INFO("Start climbing");
-	while ( HEIGHT - pose_z > 0.05) {
-		sendPose_px4(pose_x, pose_y, pose_z + SPD_CLIMB * 0.1, 1.57);
+	while ( HEIGHT - pose_z > 0.1) {
+		sendSpd_px4(0,0,0.2,0);
+		// sendPose_px4(pose_x, pose_y, pose_z + SPD_CLIMB * climb_count * 0.1, 1.57);
 		ros::Duration(0.1).sleep();
+		climb_count++;
+		ros::spinOnce();
 	}
 	ROS_INFO("climb finished");
 
