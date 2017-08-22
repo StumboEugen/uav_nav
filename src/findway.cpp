@@ -31,6 +31,7 @@ bool OUTPUT_PX4 = true;
 ros::Publisher pub_spd_gazebo;
 ros::Publisher pub_spd_px4;
 ros::Publisher pub_cam;
+ros::Publisher pub_pose_px4;
 
 void sendSpd_px4(float vx, float vy, float vz, float wz) {
 	px4_autonomy::Velocity spd;
@@ -40,6 +41,16 @@ void sendSpd_px4(float vx, float vy, float vz, float wz) {
 	spd.yaw_rate = 0;
 	spd.header.stamp = ros::Time::now();
 	pub_spd_px4.publish(spd);
+}
+
+void sendPose_px4 (float px, float py, float pz, float yaw) {
+	px4_autonomy::Position pos;
+	pos.x = px;
+	pos.y = py;
+	pos.z = pz;
+	pos.yaw = yaw;
+	pos.header.stamp = ros::Time::now();
+	pub_pose_px4.publish(spd);
 }
 
 float current_theta; //from laserCB
@@ -180,7 +191,73 @@ bool wayPointInit() {
 			addPosPoint(2.4,7);
 			addPosPoint(0.375,8.635);
 			break;
+
+		case 5:		//whole test with stop
+			addPosPoint(1,1,true);
+			addPosPoint(4,1,true);
+			addPosPoint(4.4,0,true);
+			setOriForLastPoint(3.1);
+			addPosPoint(5.25,-1,true);
+			addPosPoint(7.36,-1.2,true);
+			addPosPoint(7.34,0.668,true);
+			addPosPoint(7.25,-1.2,true);
+			addPosPoint(4.56,-0.832,true);
+			setOriForLastPoint(1.57);
+			addPosPoint(4.277,2,true);
+			addPosPoint(5.07,3,true);
+			addPosPoint(7.42,2.915,true);
+			addPosPoint(7.93,4.41,true);
+			addPosPoint(7.48,2.9,true);
+			addPosPoint(5.62,2.83,true);
+			addPosPoint(5.73,5,true);
+			addPosPoint(5.82,5.8,true);
+			addPosPoint(6.1,7,true);
+			setOriForLastPoint(0);
+			addPosPoint(7.4,7.79,true);
+			addPosPoint(5.8,8.8,true);
+			addPosPoint(3.93,9.1,true);
+			addPosPoint(3.43,7.55,true);
+			setOriForLastPoint(-1.5);
+			addPosPoint(2.27,6.87,true);
+			setOriForLastPoint(3.1);
+			addPosPoint(1.21,7.75,true);
+			addPosPoint(1.332,9.222,true);
+			addPosPoint(-0.15,8.8,true);
+			break;
 			
+		case 6:		//whole test without stop
+			addPosPoint(1,1);
+			addPosPoint(4,1);
+			addPosPoint(4.4,0);
+			setOriForLastPoint(3.1);
+			addPosPoint(5.25,-1);
+			addPosPoint(7.36,-1.2);
+			addPosPoint(7.34,0.668);
+			addPosPoint(7.25,-1.2);
+			addPosPoint(4.56,-0.832);
+			setOriForLastPoint(1.57);
+			addPosPoint(4.277,2);
+			addPosPoint(5.07,3);
+			addPosPoint(7.42,2.915);
+			addPosPoint(7.93,4.41);
+			addPosPoint(7.48,2.9);
+			addPosPoint(5.62,2.83);
+			addPosPoint(5.73,5);
+			addPosPoint(5.82,5.8);
+			addPosPoint(6.1,7);
+			setOriForLastPoint(-1.5);
+			addPosPoint(7.4,7.79);
+			addPosPoint(5.8,8.8);
+			addPosPoint(3.93,9.1);
+			addPosPoint(3.43,7.55);
+			setOriForLastPoint(0);
+			addPosPoint(2.27,6.87);
+			setOriForLastPoint(3.1);
+			addPosPoint(1.21,7.75);
+			addPosPoint(1.332,9.222);
+			addPosPoint(-0.15,8.8);
+			break;
+
 		default:
 			ROS_ERROR("no such waypoint group!!");
 			return false;
@@ -225,12 +302,13 @@ void statusCB(const std_msgs::UInt8::ConstPtr& msg) {
 }
 
 float pose_x, pose_y, pose_z, pose_yaw;
-
+px4_autonomy::Position pose_current;
 void poseCB(const px4_autonomy::Position &msg) {
 	pose_x = msg.x;
 	pose_y = msg.y;
 	pose_z = msg.z;
 	pose_yaw = msg.yaw;
+	pose_current = msg;
 }
 
 float set_point_z;
@@ -239,6 +317,27 @@ void setPointCB(const geometry_msgs::PoseStamped &msg) {
 }
 
 ros::Publisher pub_takeoff;
+
+void land() {
+	while (status != 4 && status != 5) {
+		ros::Duration(1).sleep();
+		ROS_INFO("status not 4 or 5!!");
+		ros::spinOnce();
+	}
+
+	px4_autonomy::Takeoff cmd_tf;
+	cmd_tf.take_off = 2;
+	cmd_tf.header.stamp = ros::Time::now();
+	pub_takeoff.publish(cmd_tf);
+
+	while (status != 1) {
+		ros::Duration(1).sleep();
+		ROS_INFO("landing...");
+		ros::spinOnce();
+	}
+
+	ROS_INFO("landed");
+}
 
 void takeoff() {
 	while (status != 1) {
@@ -258,13 +357,14 @@ void takeoff() {
 		ros::spinOnce();
 	}
 	
-	ROS_INFO("Start rising");
-	while (HEIGHT - set_point_z > 0.05) {
-		sendSpd_px4(0, 0, SPD_CLIMB, 0);
+	ROS_INFO("Start climbing");
+	while ( HEIGHT - pose_z > 0.05) {
+		sendPose_px4(pose_x, pose_y, pose_z + SPD_CLIMB * 0.1, 1.57);
 		ros::Duration(0.1).sleep();
 	}
+	ROS_INFO("climb finished");
 
-	sendSpd_px4(0, 0, 0, 0);
+	stop();
 	ros::Duration(1).sleep();
 }
 
@@ -298,6 +398,7 @@ int main(int argc, char **argv)
 	pub_cam = n.advertise<mavros_msgs::CameraPose>("/Cam_Pose", 1);
 	pub_takeoff = n.advertise<px4_autonomy::Takeoff>("/px4/cmd_takeoff", 1);
 	pub_spd_px4 = n.advertise<px4_autonomy::Velocity>("/px4/cmd_vel",1);
+	pub_pose_px4 = n.advertise<px4_autonomy::Position>("/px4/cmd_pose",1);
 
 	ros::Subscriber sub_laser = n.subscribe("/amcl_pose", 1, laserCB);
 	ros::Subscriber sub_status = n.subscribe("/px4/status", 1, statusCB);
@@ -330,8 +431,10 @@ int main(int argc, char **argv)
 		// ROS_INFO("??? %f\t%f", disx, disy);
 
 		if (dis < STOP_RANGE) {
-			ROS_INFO("Reach Point #%i :\t%.2f\t%.2f",progress ,
-					wayPoints[progress].x, wayPoints[progress].y);
+			ROS_INFO("Reach Point #%i \n next: \t%.3f\t%.3f\txplus:%.3f\typlus:%.3f"
+				, progress ,wayPoints[progress+1].x, wayPoints[progress+1].y,
+				wayPoints[progress+1].x - wayPoints[progress].x,
+				wayPoints[progress+1].y - wayPoints[progress].y);
 			stop();
 			if (wayPoints[progress].need_scan == false) {
 				float t = wayPoints[progress].waypoint_delay;
@@ -383,6 +486,8 @@ int main(int argc, char **argv)
 		if (progress >= numofWaypoints) {
 			stop();
 			ROS_INFO("nav finished");
+			ros::spinOnce();
+			land();
 			ros::spin();
 		}
 	}
