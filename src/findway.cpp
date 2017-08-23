@@ -19,6 +19,7 @@ const double PI = 3.1415926;
 
 #include <std_msgs/String.h>
 #include <std_msgs/UInt8.h>
+#include <std_msgs/Int32.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -57,7 +58,17 @@ void hover(float time) {
 		sendPose_px4(last_set_x, last_set_y, last_set_z, last_set_yaw);
 		ros::Duration(0.05).sleep();
 		ros::spinOnce();
-		ROS_INFO("hovering");
+	}
+}
+
+bool gotErWeiMa = false;
+int numErWeiMa = -1;
+void erweimaCB(const std_msgs::Int32 msg) {
+	if (msg.data < 0) {
+		gotErWeiMa = false;
+	} else {
+		numErWeiMa = msg.data;
+		gotErWeiMa = true;
 	}
 }
 
@@ -260,8 +271,21 @@ void land() {
 }
 
 void scan() {
-	ROS_INFO("SCANINT...");
-	hover(2);
+	ROS_INFO("scanning...");
+	bool gotit = false;
+	for (int time_count = 0; time_count <= SCAN_DELAY * 20; time_count ++) {
+		ros::spinOnce();
+		if (gotErWeiMa) {
+			ROS_INFO("got ERWEIMA: %d", numErWeiMa);
+			gotit = true;
+			break;
+		}
+		ros::Duration(0.05).sleep();
+	}
+
+	if (!gotit) {
+		ROS_ERROR("Scan TIMEOUT!!");
+	}
 }
 
 bool needSetStartXY = false;
@@ -284,8 +308,6 @@ void setStartXY(_pos_points_t wp) {
 		spdy = SPD_MAX / dis * disy;
 
 		needSetStartXY = false;
-
-		ROS_INFO("set+start:\t%f\t%f\t%f\t%f", x2set, y2set, spdx, spdy);
 	}
 }
 
@@ -324,7 +346,6 @@ int main(int argc, char **argv) {
 		ROS_INFO("waitting for amcl_pose");
 		ros::Duration(1).sleep();
 	}
-
 	ROS_INFO("get laser, start guide");
 
 	takeOff();
@@ -333,8 +354,6 @@ int main(int argc, char **argv) {
 	hover(1);
 
 	needSetStartXY = true;
-
-	ROS_INFO("JUMP IN ROS SPIN");
 
 	while (ros::ok()) {
 		
@@ -404,8 +423,6 @@ int main(int argc, char **argv) {
 			x2set += spdx * 0.05;
 			y2set += spdy * 0.05;
 		}
-
-		// ROS_INFO("%.3f\t%.3f", x2set, y2set);
 		
 		sendPose_px4(x2set, y2set, last_set_z, last_set_yaw);
 
@@ -450,8 +467,7 @@ bool wayPointInit() {
 			addPosPoint( 0.00,-5.70); setZ(1.5); setScan();
 			addPosPoint( 0.00,-5.70); setYaw(-1.57); setScan();
 			addPosPoint( 0.00,-5.70); setYaw(-3.1); setZ(1); setScan();
-			addPosPoint( 0.00, 0.00); setYaw(1.57);
-			addPosPoint( 1.00, 0.90); setYaw(-1.57);
+			addPosPoint( 0.00, 0.00); setYaw(0);
 			break;
 		default:
 			ROS_ERROR("no such waypoint group! %d", WAYPOINT_GROUP);
