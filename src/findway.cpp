@@ -366,7 +366,7 @@ int main(int argc, char **argv) {
 		float dis_now = sqrt(dis_now_x * dis_now_x + dis_now_y + dis_now_y);
 
 		if (dis_now < STOP_RANGE) {
-			ROS_INFO("Reach Point NO.%i:  %.3f\t%.3f", 
+			ROS_INFO("Reach Point NO.%i:  %.2f\t%.2f", 
 				progress, wp.x, wp.y);
 
 			if (wp.need_delay) {
@@ -376,7 +376,7 @@ int main(int argc, char **argv) {
 			if (wp.change_yaw) {
 				float from = pose_yaw;
 				float to = wp.yaw;
-				ROS_INFO("need turn\tFrom %.3f\tto %.3f", from, to);
+				ROS_INFO("need turn From %.2f\tto %.2f", from, to);
 				turnYaw(from, to);
 				hover(0.5);
 			}
@@ -384,7 +384,7 @@ int main(int argc, char **argv) {
 			if (wp.change_z) {
 				float from = pose_z;
 				float to = wp.z;
-				ROS_INFO("need climb\tFrom %.3f\tto %.3f", from, to);
+				ROS_INFO("need climb\tFrom %.2f\tto %.2f", from, to);
 				climbZ(from, to);
 			}
 
@@ -406,7 +406,7 @@ int main(int argc, char **argv) {
 
 			needSetStartXY = true;
 
-			ROS_INFO("NEXT: \t%.3f\t%.3f\txplus:%.3f\typlus:%.3f\n"
+			ROS_INFO("NEXT: \t%.2f\t%.2f\txplus:%.2f\typlus:%.2f\n"
 			, wayPoints[progress+1].x, wayPoints[progress+1].y,
 			wayPoints[progress+1].x - wp.x,
 			wayPoints[progress+1].y - wp.y);
@@ -470,6 +470,45 @@ bool wayPointInit() {
 			addPosPoint( 0.00,-5.70); setYaw(-3.1); setZ(1); setScan();
 			addPosPoint( 0.00, 0.00); setYaw(0);
 			break;
+
+		case 100:
+			addPosPoint( 1.0, 1.0); setYaw(-1.57);
+			addPosPoint( 1.0, 1.0); setYaw(0);
+			addPosPoint( 1.0, 3.0); setYaw(1.57);
+			addPosPoint( 3.0, 3.0); setYaw(3.14);
+			addPosPoint( 3.0, 1.0); setYaw(-1.57);
+			addPosPoint( 7.0, 1.0); setYaw(1.57);
+			addPosPoint( 7.0, 3.0); setYaw(3.14);
+			addPosPoint( 7.0, 1.0);
+			addPosPoint( 5.0, 1.0); setYaw(0);
+			addPosPoint( 5.0, 3.0); setYaw(1.57);
+			addPosPoint( 4.0, 3.0);
+			addPosPoint( 4.0, 5.0); setYaw(3.14);
+			addPosPoint( 2.5, 5.0); setYaw(-1.57);
+			addPosPoint( 7.4, 5.0); setYaw(1.57);
+			addPosPoint( 7.4, 7.0); setYaw(3.14);
+			addPosPoint( 7.4, 5.0);
+			addPosPoint( 5.25,5.0);
+			addPosPoint( 5.25,7.0); setYaw(0);
+			addPosPoint( 5.25,7.0); setYaw(1.57);
+			addPosPoint( 5.25,9.0); setYaw(3.14);
+			addPosPoint( 5.5, 9,0); setYaw(-1.57);
+			addPosPoint( 7.0, 9.0); setYaw(1.57);
+			addPosPoint( 7.0, 11.0);
+			addPosPoint( 3.0, 11.0);setYaw(3.14);
+			addPosPoint( 3.5, 9.0); setYaw(0);
+			addPosPoint( 3.5, 9.0); setYaw(-1.57);
+			addPosPoint( 0.6, 9.0); setYaw(1.57);
+			addPosPoint( 0.6, 11.0);setYaw(0);
+			addPosPoint( 0.6, 9.0);
+			addPosPoint( 1.75,9.0); setYaw(-1.57);
+			addPosPoint( 1.75,7.0); setYaw(0);
+			addPosPoint( 3.0, 7.0); setYaw(1.57);
+			addPosPoint( 0.6, 7.0); setYaw(-1.57);
+			addPosPoint( 0.6, 5.0); setYaw(0);
+			addPosPoint( 0.0, 5.5);
+			break;
+
 		default:
 			ROS_ERROR("no such waypoint group! %d", WAYPOINT_GROUP);
 			return false;
