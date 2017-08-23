@@ -204,6 +204,3 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_executable(uav_nav src/findway.cpp)
 target_link_libraries(uav_nav ${catkin_LIBRARIES})
-
-add_executable(tf_test src/tf_test.cpp)
-target_link_libraries(tf_test ${catkin_LIBRARIES})

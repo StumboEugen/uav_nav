@@ -1,4 +1,6 @@
  <launch>
+ 	<include file="$(find uav_nav)/launch/amcl_demo.launch" />
+ 	
 	 <node pkg="uav_nav" type="uav_nav" name="uav_nav" output="screen">
 
 	 	<param name="spd_max"				value="0.2"/>
@@ -9,11 +11,11 @@
 	 	<param name="stop_range"			value="0.15"/>
 	 	<param name="safe_range"			value="0.8"/>
 	 	<param name="brake_coe"				value="1"/>
-	 	<param name="waypoint_group"		value="5"/>
+	 	<param name="waypoint_group"		value="6"/>
 	 	<param name="height"				value="1"/>
 	 	<param name="spd_climb"				value="0.25"/>
 	 	<param name="spd_turn"				value="0.5"/>
-	 	<param name="angle_tolerance"		value="0.1"/>
-	 	<param name="z_tolerance"			value="0.05"/>
+	 	<param name="angle_tolerance"		value="0.15"/>
+	 	<param name="z_tolerance"			value="0.12"/>
 	 </node>
 </launch>
