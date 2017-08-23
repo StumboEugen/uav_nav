@@ -338,6 +338,7 @@ int main(int argc, char **argv) {
 	ros::Subscriber sub_laser = n.subscribe("/mavros/vision_pose/pose", 1, laserPoseCB);
 	ros::Subscriber sub_pose = n.subscribe("/px4/pose", 1, poseCB);	
 	ros::Subscriber sub_status = n.subscribe("/px4/status", 1, statusCB);
+	ros::Subscriber sub_erweima = n.subscribe("/rec_num", 1, erweimaCB);
 
 	ros::Rate loop_rate(20);
 
