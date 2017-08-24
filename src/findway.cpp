@@ -407,9 +407,9 @@ int main(int argc, char **argv) {
 			needSetStartXY = true;
 
 			ROS_INFO("NEXT: \t%.2f\t%.2f\txplus:%.2f\typlus:%.2f\n"
-			, wayPoints[progress+1].x, wayPoints[progress+1].y,
-			wayPoints[progress+1].x - wp.x,
-			wayPoints[progress+1].y - wp.y);
+			, wayPoints[progress].x, wayPoints[progress].y,
+			wayPoints[progress].x - wp.x,
+			wayPoints[progress].y - wp.y);
 
 			continue;
 		}
@@ -492,7 +492,7 @@ bool wayPointInit() {
 			addPosPoint( 5.25,7.0); setYaw(0);
 			addPosPoint( 5.25,7.0); setYaw(1.57);
 			addPosPoint( 5.25,9.0); setYaw(3.14);
-			addPosPoint( 5.5, 9,0); setYaw(-1.57);
+			addPosPoint( 5.5, 9.0); setYaw(-1.57);
 			addPosPoint( 7.0, 9.0); setYaw(1.57);
 			addPosPoint( 7.0, 11.0);
 			addPosPoint( 3.0, 11.0);setYaw(3.14);
@@ -507,6 +507,44 @@ bool wayPointInit() {
 			addPosPoint( 0.6, 7.0); setYaw(-1.57);
 			addPosPoint( 0.6, 5.0); setYaw(0);
 			addPosPoint( 0.0, 5.5);
+			break;
+
+		case 101:
+			addPosPoint( 1.0, 1.5);
+			addPosPoint( 1.0, 3.3); setYaw(1.57);
+			addPosPoint( 4.0, 3.0); setYaw(0);		setZ(1);
+			addPosPoint( 5.2, 2.5); setYaw(-1.57);	setZ(1.5);
+			addPosPoint( 4.0, 1.0); setZ(1.3);
+			addPosPoint( 7.3, 1.0); setYaw(3.1);
+			addPosPoint( 7.3, 3.4);
+			addPosPoint( 7.3, 1.0);
+			addPosPoint( 4.0, 1.0); setYaw(1.57);
+			addPosPoint( 4.0, 5.3); setYaw(-1.57);	setZ(1);
+			addPosPoint( 6.2, 5.3); setYaw(3.1);
+			addPosPoint( 5.4, 6.5); setZ(1.2);
+			addPosPoint( 5.4, 6.9); setYaw(0); 		setZ(1);
+			addPosPoint( 5.6, 7.4); setYaw(-1.57);
+			addPosPoint( 5.4, 5.4); setYaw(3.1); 	setZ(1.3);
+			addPosPoint( 3.0, 5.7); setYaw(1.57);
+			addPosPoint( 3.0, 7.5); setYaw(-1.57);
+			addPosPoint( 0.9, 7.5);
+			addPosPoint( 0.9, 5.5); setYaw(1.57);
+			addPosPoint( 0.9, 7.3);
+			addPosPoint( 2.0, 8.0);
+			addPosPoint( 2.0, 9.6);
+			addPosPoint( 0.5, 9.6); setYaw(0);		setZ(1.2);
+			addPosPoint( 0.5, 11.3);setYaw(-1.57);
+			addPosPoint( 0.7, 9.5); setYaw(0);
+			addPosPoint( 3.0, 9.5); setZ(1);
+			addPosPoint( 3.7, 10.0);setYaw(1.57);
+			addPosPoint( 3.0, 11.5);setYaw(3.1);	setZ(1.3);
+			addPosPoint( 2.5, 10.0);setYaw(-1.57);
+			addPosPoint( 6.0, 10.0);
+			addPosPoint( 6.8, 9.5); setYaw(3.1);
+			addPosPoint( 5.7, 10.8);setZ(1.45);
+			addPosPoint( 6.0, 11.5);setYaw(1.57);
+			addPosPoint( 6.5, 10.5);
+
 			break;
 
 		default:
